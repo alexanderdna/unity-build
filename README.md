@@ -2,6 +2,10 @@
 
 A script to build Unity projects from the terminal.
 
+## Prerequisites
+
+Node 16
+
 ## Usage
 
 ```bash
