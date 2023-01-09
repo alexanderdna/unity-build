@@ -8,8 +8,7 @@
     "pkg": "npm run build && pkg -t node16 -o bin/unitybuild.exe ./dist/unitybuild.js"
   },
   "author": "Anh Dang",
-  "license": "UNLICENSED",
-  "private": true,
+  "license": "MIT",
   "dependencies": {
     "adm-zip": "^0.5.10",
     "execa": "^5.1.1",
