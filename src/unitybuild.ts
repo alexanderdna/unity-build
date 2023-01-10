@@ -1,9 +1,10 @@
+import fs from 'fs';
+import path from 'path';
+import execa from 'execa';
+import AdmZip from 'adm-zip';
 import UnityCommandBuilder from './akiojin/UnityCommandBuilder';
 import { UnityBuildTarget } from './akiojin/UnityBuildTarget';
-import execa from 'execa';
-import fs from 'fs';
-import AdmZip from 'adm-zip';
-import path from 'path';
+import ProjectSettings from './ProjectSettings';
 
 const usage = `Usage: unitybuild <unity build json file>`;
 
@@ -80,36 +81,24 @@ if (typeof outputPath === 'string') {
   builder.Append(outputPath);
 }
 
-const projectSettingsPath = path.join(
-  projectPath,
-  'ProjectSettings',
-  'ProjectSettings.asset'
-);
-let oldProjectSettings = '';
-let keystore = process.env.UB_KEYSTORE;
-let keyalias = process.env.UB_KEYALIAS;
-if (typeof keystore === 'string' && typeof keyalias === 'string') {
-  let projectSettings = fs.readFileSync(projectSettingsPath, 'utf-8');
-  oldProjectSettings = projectSettings;
-  projectSettings = projectSettings
-    .replace(
-      /AndroidKeystoreName: [^\r\n]*/,
-      `AndroidKeystoreName: '${keystore}'`
-    )
-    .replace(
-      /AndroidKeyaliasName: [^\r\n]*/,
-      `AndroidKeyaliasName: ${keyalias}`
-    )
-    .replace('androidUseCustomKeystore: 0', 'androidUseCustomKeystore: 1');
-  fs.writeFileSync(projectSettingsPath, projectSettings, 'utf-8');
+const projectSettings = new ProjectSettings(projectPath);
+projectSettings.read();
+if (target === 'Android') {
+  projectSettings.setKeystoreDetails();
 }
 
 (async function () {
-  const proc = execa(exePath, builder.Build());
-  proc.stdout?.pipe(process.stdout);
-  const result = await proc;
-
-  fs.writeFileSync(projectSettingsPath, oldProjectSettings, 'utf-8');
+  let result: execa.ExecaReturnValue<string>;
+  try {
+    const proc = execa(exePath, builder.Build());
+    proc.stdout?.pipe(process.stdout);
+    result = await proc;
+  } catch (err) {
+    console.error(err);
+    process.exit(999);
+  } finally {
+    projectSettings.revert();
+  }
 
   if (result.failed) {
     process.exit(result.exitCode);
