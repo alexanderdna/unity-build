@@ -42,7 +42,7 @@ if (
   process.exit(3);
 }
 
-const outputPath = json.outputPath;
+let outputPath = json.outputPath;
 if (outputPath && typeof outputPath !== 'string') {
   console.error('Invalid JSON file');
   process.exit(3);
@@ -65,8 +65,43 @@ if (typeof logPath === 'string') {
 }
 
 builder.SetExecuteMethod(method);
-if (outputPath) {
-  builder.Append(outputPath as string);
+if (typeof outputPath === 'string') {
+  const now = new Date();
+  const dateString =
+    now.getFullYear().toString().slice(-2) +
+    (now.getMonth() + 1).toString().padStart(2, '0') +
+    now.getDate().toString().padStart(2, '0');
+  const timeString =
+    now.getHours().toString().padStart(2, '0') +
+    now.getMinutes().toString().padStart(2, '0');
+  outputPath = outputPath
+    .replaceAll('{date}', dateString)
+    .replaceAll('{time}', timeString);
+  builder.Append(outputPath);
+}
+
+const projectSettingsPath = path.join(
+  projectPath,
+  'ProjectSettings',
+  'ProjectSettings.asset'
+);
+let oldProjectSettings = '';
+let keystore = process.env.UB_KEYSTORE;
+let keyalias = process.env.UB_KEYALIAS;
+if (typeof keystore === 'string' && typeof keyalias === 'string') {
+  let projectSettings = fs.readFileSync(projectSettingsPath, 'utf-8');
+  oldProjectSettings = projectSettings;
+  projectSettings = projectSettings
+    .replace(
+      /AndroidKeystoreName: [^\r\n]*/,
+      `AndroidKeystoreName: '${keystore}'`
+    )
+    .replace(
+      /AndroidKeyaliasName: [^\r\n]*/,
+      `AndroidKeyaliasName: ${keyalias}`
+    )
+    .replace('androidUseCustomKeystore: 0', 'androidUseCustomKeystore: 1');
+  fs.writeFileSync(projectSettingsPath, projectSettings, 'utf-8');
 }
 
 (async function () {
@@ -74,13 +109,19 @@ if (outputPath) {
   proc.stdout?.pipe(process.stdout);
   const result = await proc;
 
+  fs.writeFileSync(projectSettingsPath, oldProjectSettings, 'utf-8');
+
   if (result.failed) {
     process.exit(result.exitCode);
   }
 
+  if (result.stdout.length > 0) {
+    console.log('\n');
+  }
+
   const source = path.join(projectPath, outputPath);
   if (!fs.existsSync(source)) {
-    console.error(`Source does not exist: ${source}`);
+    console.error(`Artifact does not exist: ${source}`);
     process.exit(5);
   }
 
@@ -96,8 +137,6 @@ if (outputPath) {
       zip.addLocalFolder(source);
     }
     zip.writeZip(outputFile);
-
-    console.log('\n');
     console.log(`Zip file created: ${outputFile}`);
   }
 })();
