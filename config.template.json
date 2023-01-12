@@ -3,7 +3,7 @@
     "projectPath": "path/to/project",
     "target": "platform (Android|iOS|WebGL|...)",
     "method": "name of build method",
-    "outputPath": "build/output/relative/to/project/path",
+    "outputPath": "build/output/path",
     "logPath": "build.log (optional)",
     "zipPath": "zip/file/of/build/output (optional)"
 }
