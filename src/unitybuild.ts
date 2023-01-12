@@ -88,11 +88,11 @@ if (config.target === 'Android') {
 
   if (config.hasZipPath) {
     const zip = new AdmZip();
-    const sourceStat = fs.statSync(artifactPath);
+    const artifactStat = fs.statSync(artifactPath);
     const outputFile = path.isAbsolute(config.zipPath)
       ? config.zipPath
       : path.join(process.cwd(), config.zipPath);
-    if (sourceStat.isFile()) {
+    if (artifactStat.isFile()) {
       zip.addLocalFile(artifactPath);
     } else {
       zip.addLocalFolder(artifactPath);
