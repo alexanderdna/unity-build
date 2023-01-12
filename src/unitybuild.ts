@@ -78,9 +78,7 @@ if (config.target === 'Android') {
     console.log('\n');
   }
 
-  const artifactPath = path.isAbsolute(config.outputPath)
-    ? config.outputPath
-    : path.join(config.projectPath, config.outputPath);
+  const artifactPath = config.outputPath;
   if (!fs.existsSync(artifactPath)) {
     console.error(`Artifact does not exist: ${artifactPath}`);
     process.exit(5);

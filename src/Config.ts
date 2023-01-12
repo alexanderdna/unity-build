@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import { isValidTarget, UnityBuildTarget } from './akiojin/UnityBuildTarget';
 
 export default class Config {
@@ -66,12 +67,12 @@ export default class Config {
     this._method = json.method;
     this._outputPath = json.outputPath;
     if (json.logPath) {
-      this._logPath = json.logPath;
+      this._logPath = this.resolvePath(json.logPath);
     } else {
       this._logPath = '';
     }
     if (json.zipPath) {
-      this._zipPath = json.zipPath;
+      this._zipPath = this.resolvePath(json.zipPath);
     } else {
       this._zipPath = '';
     }
@@ -116,8 +117,18 @@ export default class Config {
     const timeString =
       now.getHours().toString().padStart(2, '0') +
       now.getMinutes().toString().padStart(2, '0');
-    this._outputPath = this._outputPath
-      .replaceAll('{date}', dateString)
-      .replaceAll('{time}', timeString);
+    this._outputPath = this.resolvePath(
+      this._outputPath
+        .replaceAll('{date}', dateString)
+        .replaceAll('{time}', timeString)
+    );
+  }
+
+  private resolvePath(p: string) {
+    return path.resolve(
+      p
+        .replaceAll('{proj}', this._projectPath)
+        .replaceAll('{cwd}', process.cwd())
+    );
   }
 }

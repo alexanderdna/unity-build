@@ -15,6 +15,8 @@ npm run pkg
 
 Create a JSON configuration file from the `config.template.json` template. In the `outputPath` field, you can use `{date}` and `{time}` variables which will be replaced with the current date and time.
 
+In `outputPath`, `logPath` and `zipPath`, you can also use the variables `{cwd}` and `{proj}` which will be substituted with the current working directory and project directory, respectively.
+
 ```bash
 ./bin/unitybuild <your config file>
 ```
@@ -49,9 +51,9 @@ JSON configuration:
   "projectPath": "D:\\proj\\MyFunGame",
   "target": "Android",
   "method": "Editor.Build.CLIBuild.BuildAndroid",
-  "outputPath": "Build\\Android\\build-{date}.apk",
-  "logPath": "build.log",
-  "zipPath": "artifacts\\android-build.zip"
+  "outputPath": "{proj}\\Build\\Android\\build-{date}.apk",
+  "logPath": "{cwd}\\build.log",
+  "zipPath": "{cwd}\\artifacts\\android-build.zip"
 }
 ```
 
