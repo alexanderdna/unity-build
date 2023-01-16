@@ -10,6 +10,7 @@ export default class Config {
   private _outputPath: string;
   private _logPath: string;
   private _zipPath: string;
+  private _ignorePathValidation: boolean;
 
   get exePath() {
     return this._exePath;
@@ -57,7 +58,10 @@ export default class Config {
       typeof json.outputPath === 'string' &&
       (typeof json.logPath === 'undefined' ||
         typeof json.logPath === 'string') &&
-      (typeof json.zipPath === 'undefined' || typeof json.zipPath === 'string');
+      (typeof json.zipPath === 'undefined' ||
+        typeof json.zipPath === 'string') &&
+      (typeof json.ignorePathValidation === 'undefined' ||
+        typeof json.ignorePathValidation === 'boolean');
     if (!isValidJson) {
       throw new Error('invalid config json');
     }
@@ -76,22 +80,29 @@ export default class Config {
     } else {
       this._zipPath = '';
     }
+    if (typeof json.ignorePathValidation === 'boolean') {
+      this._ignorePathValidation = json.ignorePathValidation;
+    } else {
+      this._ignorePathValidation = false;
+    }
 
     this.validate();
     this.checkOutputPath();
   }
 
   private validate() {
-    try {
-      fs.accessSync(this.exePath, fs.constants.X_OK);
-    } catch {
-      throw new Error('invalid exe path');
-    }
+    if (!this._ignorePathValidation) {
+      try {
+        fs.accessSync(this.exePath, fs.constants.X_OK);
+      } catch {
+        throw new Error('invalid exe path');
+      }
 
-    try {
-      fs.accessSync(this.projectPath, fs.constants.R_OK);
-    } catch {
-      throw new Error('invalid project path');
+      try {
+        fs.accessSync(this.projectPath, fs.constants.R_OK);
+      } catch {
+        throw new Error('invalid project path');
+      }
     }
 
     if (!isValidTarget(this.target)) {
@@ -105,7 +116,7 @@ export default class Config {
   }
 
   private checkOutputPath() {
-    if (this.outputPath == '') {
+    if (!this._ignorePathValidation && this.outputPath == '') {
       throw new Error('invalid output path');
     }
 
